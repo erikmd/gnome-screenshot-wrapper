@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Author: Erik Martin-Dorel, 2016
+# Version: 0.7
+#
+# Instructions:
+# $ sudo dpkg-divert --add --rename --divert /usr/bin/gnome-screenshot.real /usr/bin/gnome-screenshot
+# $ sudo cp -iv gnome-screenshot /usr/bin/gnome-screenshot
+# $ sudo chown -v root:root /usr/bin/gnome-screenshot
+# $ sudo chmod -v +x /usr/bin/gnome-screenshot
+
+interact="false"
+area="false"
+
+for arg; do
+    # the following disjunction could be optimized
+    if [ "x$arg" = "x-c" -o "x$arg" = "x--clipboard" -o "x$arg" = "x-i" -o "x$arg" = "x--interactive" -o "x$arg" = "x--gapplication-service" -o "x$arg" = "x-h" -o "x$arg" = "x--help" -o "x$arg" = "x--help-all" -o "x$arg" = "x--help-gtk" -o "x$arg" = "x--help-gapplication" ]; then
+    # --gapplication-service is triggered when clicking on the .desktop icon
+        interact="true"
+    fi
+    if [ "x$arg" = "x-a" -o "x$arg" = "x--area" ]; then
+        area="true"
+    fi
+done
+
+# the following test could be optimized
+if ls -1qA /tmp/gnome-screenshot_*.png 2>/dev/null | grep -q .; then
+    echo "The existence of the following files suggest gnome-screenshot is running:" >&2
+    ls -1qA /tmp/gnome-screenshot_*.png >&2
+    exit 2
+fi
+
+if [ "$interact" = "false" -a "$area" = "false" ]; then
+    tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
+    gnome-screenshot.real -f "$tmp" "$@"
+
+    if [ $? -ne 0 -o $(stat -c "%c" "$tmp") -eq 0 ]; then
+        echo "An error occured." >&2
+        rm -f "$tmp"
+        exit 2
+    fi
+
+    fil=$(date -Is)
+    fil=${fil%+*}
+    fil=${fil//:/-}
+    fil=${fil/T/_}
+    fil="$HOME/Pictures/${fil}_Screenshot.png"
+    fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
+
+    if [ $? -ne 0 -o "x$fil" = "x" ]; then
+        echo "Action canceled." >&2
+        rm -f "$tmp"
+        exit 1
+    else
+        mv -f "$tmp" "$fil"
+    fi
+else
+    if [ "$interact" = "false" -a "$area" = "true" ]; then
+        # the following "lock" could be optimized
+        tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
+
+        fil=$(date -Is)
+        fil=${fil%+*}
+        fil=${fil//:/-}
+        fil=${fil/T/_}
+        fil="$HOME/Pictures/${fil}_Screenshot.png"
+        fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
+
+        rm -f "$tmp"
+        if [ $? -ne 0 -o "x$fil" = "x" ]; then
+            echo "Action canceled." >&2
+            exit 1
+        fi
+        gnome-screenshot.real -f "$fil" "$@"
+    else
+        gnome-screenshot.real "$@"
+    fi
+fi
