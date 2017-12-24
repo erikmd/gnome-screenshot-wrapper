@@ -23,8 +23,6 @@ install:
 	[ -f $(TARGET) ] && [ -x $(TARGET) ]
 	# Ensure dpkg-divert works & raises no clashes for this divert
 	dpkg-divert --test $(DIVERT)
-	# Ensure the divert is not already installed
-	LC_ALL=C dpkg-divert --test $(DIVERT) | grep -e '^Adding'
 	# Install the divert
 	dpkg-divert $(DIVERT)
 	# Install the wrapper
