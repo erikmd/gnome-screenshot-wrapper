@@ -20,71 +20,76 @@ function is_among() {
     return 1
 }
 
-interactFlags=("-c" "--clipboard" "-i" "--interactive" "--gapplication-service" "-h" "--help" "--help-all" "--help-gtk" "--help-gapplication")
-# --gapplication-service is triggered when clicking on the .desktop icon
-areaFlags=("-a" "--area")
-
-interact="false"
-area="false"
-for arg; do
-    if is_among "$arg" "${interactFlags[@]}"; then
-        interact="true"
-    fi
-    if is_among "$arg" "${areaFlags[@]}"; then
-        area="true"
-    fi
-done
-
-# the following test could be optimized
-if ls -1qA /tmp/gnome-screenshot_*.png 2>/dev/null | grep -q .; then
-    echo "The existence of the following files suggest gnome-screenshot is running:" >&2
-    ls -1qA /tmp/gnome-screenshot_*.png >&2
-    exit 2
-fi
-
-if [ "$interact" = "false" ]; then
-    if [ "$area" = "false" ]; then
-        tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
-        gnome-screenshot.real -f "$tmp" "$@"
-
-        if [ $? -ne 0 -o $(stat -c "%c" "$tmp") -eq 0 ]; then
-            echo "An error occured." >&2
-            rm -f "$tmp"
-            exit 2
-        fi
-
-        fil=$(date -Is)
-        fil=${fil%+*}
-        fil=${fil//:/-}
-        fil=${fil/T/_}
-        fil="$HOME/Pictures/${fil}_Screenshot.png"
-        fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
-
-        if [ $? -ne 0 -o "x$fil" = "x" ]; then
-            echo "Action canceled." >&2
-            rm -f "$tmp"
-            exit 1
-        else
-            mv -f "$tmp" "$fil"
-        fi
+function get_lock() {
+    if mkdir "$lockdir"; then
+        echo "$prog: successfully acquired lock" >&2
+        trap 'rm -rf "$lockdir"' 0
     else
-        # the following "lock" could be optimized
-        tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
-
-        fil=$(date -Is)
-        fil=${fil%+*}
-        fil=${fil//:/-}
-        fil=${fil/T/_}
-        fil="$HOME/Pictures/${fil}_Screenshot.png"
-        fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
-
-        rm -f "$tmp"
-        if [ $? -ne 0 -o "x$fil" = "x" ]; then
-            echo "Action canceled." >&2
-            exit 1
-        fi
-        gnome-screenshot.real -f "$fil" "$@"
+        echo "$prog: cannot acquire lock on '$lockdir'" >&2
+        exit 0
     fi
-else
-    gnome-screenshot.real "$@"
-fi
+}
+
+function main() {
+    local lockdir='/tmp/gnome-screenshot-wrapper'
+    local prog='gnome-screenshot'
+
+    local interactFlags=("-c" "--clipboard" "-i" "--interactive" "--gapplication-service" "-h" "--help" "--help-all" "--help-gtk" "--help-gapplication")
+    # --gapplication-service is triggered when clicking on the .desktop icon
+    local areaFlags=("-a" "--area")
+
+    local interact="false"
+    local area="false"
+    for arg; do
+        if is_among "$arg" "${interactFlags[@]}"; then
+            interact="true"
+        fi
+        if is_among "$arg" "${areaFlags[@]}"; then
+            area="true"
+        fi
+    done
+
+    if [ "$interact" = "false" ]; then
+        get_lock
+        if [ "$area" = "false" ]; then
+            tmp=$(mktemp "$lockdir/tmp.XXXXXXXXXX.png")
+
+            if ! gnome-screenshot.real -f "$tmp" "$@"; then
+                echo "$prog: An error occured." >&2
+                exit 2
+            fi
+
+            fil=$(date -Is)
+            fil=${fil%+*}
+            fil=${fil//:/-}
+            fil=${fil/T/_}
+            fil="$HOME/Pictures/${fil}_Screenshot.png"
+            fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
+
+            if [ $? -ne 0 ] || [ "$fil" = "" ]; then
+                echo "$prog: action canceled" >&2
+                exit 1
+            else
+                mv -f "$tmp" "$fil"
+            fi
+        else
+            fil=$(date -Is)
+            fil=${fil%+*}
+            fil=${fil//:/-}
+            fil=${fil/T/_}
+            fil="$HOME/Pictures/${fil}_Screenshot.png"
+            fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
+
+            if [ $? -ne 0 ] || [ "$fil" = "" ]; then
+                echo "$prog: action canceled" >&2
+                exit 1
+            fi
+            gnome-screenshot.real -f "$fil" "$@"
+        fi
+        exit 0 # explicit quit to run the trap w.r.t. the local var ($lockdir)
+    else
+        exec gnome-screenshot.real "$@"
+    fi
+}
+
+main "$@"
