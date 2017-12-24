@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Author: Erik Martin-Dorel, 2016
+# Author: Erik Martin-Dorel, 2016-2017
 # Version: 0.8-git
 #
 # Instructions:
@@ -42,32 +42,32 @@ if ls -1qA /tmp/gnome-screenshot_*.png 2>/dev/null | grep -q .; then
     exit 2
 fi
 
-if [ "$interact" = "false" -a "$area" = "false" ]; then
-    tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
-    gnome-screenshot.real -f "$tmp" "$@"
+if [ "$interact" = "false" ]; then
+    if [ "$area" = "false" ]; then
+        tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
+        gnome-screenshot.real -f "$tmp" "$@"
 
-    if [ $? -ne 0 -o $(stat -c "%c" "$tmp") -eq 0 ]; then
-        echo "An error occured." >&2
-        rm -f "$tmp"
-        exit 2
-    fi
+        if [ $? -ne 0 -o $(stat -c "%c" "$tmp") -eq 0 ]; then
+            echo "An error occured." >&2
+            rm -f "$tmp"
+            exit 2
+        fi
 
-    fil=$(date -Is)
-    fil=${fil%+*}
-    fil=${fil//:/-}
-    fil=${fil/T/_}
-    fil="$HOME/Pictures/${fil}_Screenshot.png"
-    fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
+        fil=$(date -Is)
+        fil=${fil%+*}
+        fil=${fil//:/-}
+        fil=${fil/T/_}
+        fil="$HOME/Pictures/${fil}_Screenshot.png"
+        fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
 
-    if [ $? -ne 0 -o "x$fil" = "x" ]; then
-        echo "Action canceled." >&2
-        rm -f "$tmp"
-        exit 1
+        if [ $? -ne 0 -o "x$fil" = "x" ]; then
+            echo "Action canceled." >&2
+            rm -f "$tmp"
+            exit 1
+        else
+            mv -f "$tmp" "$fil"
+        fi
     else
-        mv -f "$tmp" "$fil"
-    fi
-else
-    if [ "$interact" = "false" -a "$area" = "true" ]; then
         # the following "lock" could be optimized
         tmp=$(mktemp "/tmp/gnome-screenshot_XXX.png")
 
@@ -84,7 +84,7 @@ else
             exit 1
         fi
         gnome-screenshot.real -f "$fil" "$@"
-    else
-        gnome-screenshot.real "$@"
     fi
+else
+    gnome-screenshot.real "$@"
 fi
