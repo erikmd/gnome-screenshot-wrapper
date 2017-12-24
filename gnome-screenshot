@@ -37,6 +37,7 @@ function main() {
 
     local interact="false"
     local area="false"
+    local ret='0'
     for arg; do
         if is_among "$arg" "${interactFlags[@]}"; then
             interact="true"
@@ -51,9 +52,10 @@ function main() {
         if [ "$area" = "false" ]; then
             tmp=$(mktemp "$lockdir/tmp.XXXXXXXXXX.png")
 
-            if ! gnome-screenshot.real -f "$tmp" "$@"; then
-                echo "$prog: An error occured." >&2
-                exit 2
+            gnome-screenshot.real -f "$tmp" "$@" || ret="$?"
+            if [ "$ret" -ne 0 ]; then
+                echo "$prog: an error occured." >&2
+                exit "$ret"
             fi
 
             fil="${prefix}$(date "+$format")${suffix}"
@@ -73,9 +75,9 @@ function main() {
                 echo "$prog: action canceled" >&2
                 exit 1
             fi
-            gnome-screenshot.real -f "$fil" "$@"
+            gnome-screenshot.real -f "$fil" "$@" || ret="$?"
         fi
-        exit 0 # explicit quit to run the trap w.r.t. the local var ($lockdir)
+        exit "$ret" # explicit quit to run the trap using local var ($lockdir)
     else
         exec gnome-screenshot.real "$@"
     fi
