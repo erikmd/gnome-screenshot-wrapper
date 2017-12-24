@@ -8,7 +8,6 @@ INSTALL_EXEC=install -m 755
 SRC=gnome-screenshot
 TARGET=/usr/bin/gnome-screenshot
 BACKUP=/usr/bin/gnome-screenshot.real
-DIVERT=--add --rename --divert $(BACKUP) $(TARGET)
 
 all: help
 
@@ -21,10 +20,8 @@ install:
 	zenity --version
 	# Ensure $(TARGET) is executable
 	[ -f $(TARGET) ] && [ -x $(TARGET) ]
-	# Ensure dpkg-divert works & raises no clashes for this divert
-	dpkg-divert --test $(DIVERT)
 	# Install the divert
-	dpkg-divert $(DIVERT)
+	dpkg-divert --add --rename --divert $(BACKUP) $(TARGET)
 	# Install the wrapper
 	$(INSTALL_EXEC) $(SRC) $(TARGET)
 
