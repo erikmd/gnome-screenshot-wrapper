@@ -17,7 +17,7 @@ help:
 
 install:
 	# Ensure zenity is installed
-	zenity --version
+	which zenity
 	# Ensure $(TARGET) is executable
 	[ -f $(TARGET) ] && [ -x $(TARGET) ]
 	# Install the divert
