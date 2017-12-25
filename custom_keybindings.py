@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2017  Erik Martin-Dorel
+
+import ast
+import subprocess
+import sys
+
+def disable_default_keybinding(command):
+    schema = 'org.gnome.settings-daemon.plugins.media-keys'
+    cmd = ['set', schema, command, '']
+    subprocess.check_call(['gsettings'] + cmd)
+
+def reset_default_keybinding(command):
+    schema = 'org.gnome.settings-daemon.plugins.media-keys'
+    cmd = ['reset', schema, command]
+    subprocess.check_call(['gsettings'] + cmd)
+
+def add_custom_keybinding(name, command, binding):
+    schema = 'org.gnome.settings-daemon.plugins.media-keys'
+    key = 'custom-keybindings'
+    schema2 = schema + '.' + key
+    path = '/' + schema2.replace('.', '/') + '/'
+    schema2 = schema2[:-1] + ':'
+    out = subprocess.check_output(["gsettings", "get", schema, key]).decode("utf-8").rstrip()
+    if out[-2:] == '[]':
+        lst = []
+    else:
+        lst = ast.literal_eval(out)
+    custom = "custom"
+    n = 0
+    item = path + custom + str(n) + "/"
+    while item in lst:
+        n += 1
+        item = path + custom + str(n) + "/"
+    lst.append(item)
+    cmd0 = [schema, key, str(lst)]
+    cmd1 = [schema2 + item, "name", name]
+    cmd2 = [schema2 + item, "command", command]
+    cmd3 = [schema2 + item, "binding", binding]
+    for cmd in [cmd0, cmd1, cmd2, cmd3]:
+        subprocess.check_call(["gsettings", "set"] + cmd)
+
+def remove_custom_keybinding(command, binding):
+    schema = 'org.gnome.settings-daemon.plugins.media-keys'
+    key = 'custom-keybindings'
+    schema2 = (schema + '.' + key)[:-1] + ':'
+    get = lambda args: subprocess.check_output(["gsettings", "get"] + args).decode("utf-8").rstrip()
+    out = get([schema, key])
+    if out[-2:] == '[]':
+        lst = []
+    else:
+        lst = ast.literal_eval(out)
+    lst2 = list(lst)
+    for item in lst2:
+        xcommand = get([schema2 + item, "command"]).strip("'")
+        xbinding = get([schema2 + item, "binding"]).strip("'")
+        if command == xcommand and binding == xbinding:
+            cmd = ['reset-recursively', schema2 + item]
+            subprocess.check_call(['gsettings'] + cmd)
+            lst.remove(item)
+    if len(lst) < len(lst2):
+        if lst == []:
+            cmd = ['reset', schema, key]
+            subprocess.check_call(['gsettings'] + cmd)
+        else:
+            cmd = ['set', schema, key, str(lst)]
+            subprocess.check_call(['gsettings'] + cmd)
+
+if len(sys.argv) != 2 or not sys.argv[1] in ['install', 'uninstall']:
+    print("""Usage:
+./custom-keybindings.py install
+./custom-keybindings.py uninstall""", file=sys.stderr)
+    exit(0)
+
+if sys.argv[1] == "install":
+    disable_default_keybinding('screenshot')
+    disable_default_keybinding('area-screenshot')
+    disable_default_keybinding('window-screenshot')
+    add_custom_keybinding('Interactive Screenshot', 'gnome-screenshot-wrapper', 'Print')
+    add_custom_keybinding('Interactive Screenshot of an area', 'gnome-screenshot-wrapper -a', '<Shift>Print')
+    add_custom_keybinding('Interactive Screenshot of a window', 'gnome-screenshot-wrapper -w', '<Alt>Print')
+
+if sys.argv[1] == "uninstall":
+    remove_custom_keybinding('gnome-screenshot-wrapper', 'Print')
+    remove_custom_keybinding('gnome-screenshot-wrapper -a', '<Shift>Print')
+    remove_custom_keybinding('gnome-screenshot-wrapper -w', '<Alt>Print')
+    reset_default_keybinding('screenshot')
+    reset_default_keybinding('area-screenshot')
+    reset_default_keybinding('window-screenshot')
