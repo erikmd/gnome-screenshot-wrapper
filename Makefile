@@ -6,7 +6,7 @@ INSTALL_DIR=install -d
 INSTALL_FILE=install -m 644
 INSTALL_EXEC=install -m 755
 SRC=gnome-screenshot-wrapper
-TARGET=/usr/bin/gnome-screenshot-wrapper
+TARGET=/usr/local/bin/gnome-screenshot-wrapper
 BINARY=/usr/bin/gnome-screenshot
 
 all: help
