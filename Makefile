@@ -12,8 +12,11 @@ BINARY=/usr/bin/gnome-screenshot
 all: help
 
 help:
-	@echo "Run 'make install'   to set up $(SRC)"
-	@echo "Run 'make uninstall' to remove $(SRC)"
+	@echo "Run 'make install'   to setup $(SRC)"
+	@echo "Run 'make uninstall' to purge $(SRC)"
+	@echo
+	@echo "REMARK: These commands should be run as a normal user."
+	@echo "(The step that needs superuser rights will call sudo.)"
 
 install:
 	# Ensure zenity is installed
