@@ -5,32 +5,30 @@
 INSTALL_DIR=install -d
 INSTALL_FILE=install -m 644
 INSTALL_EXEC=install -m 755
-SRC=gnome-screenshot
-TARGET=/usr/bin/gnome-screenshot
-BACKUP=/usr/bin/gnome-screenshot.real
+SRC=gnome-screenshot-wrapper
+TARGET=/usr/bin/gnome-screenshot-wrapper
+BINARY=/usr/bin/gnome-screenshot
 
 all: help
 
 help:
-	@echo "Run 'sudo make install'   to set up the $(SRC) wrapper"
-	@echo "Run 'sudo make uninstall' to remove the $(SRC) wrapper"
+	@echo "Run 'make install'   to set up $(SRC)"
+	@echo "Run 'make uninstall' to remove $(SRC)"
 
 install:
 	# Ensure zenity is installed
 	which zenity
-	# Ensure $(TARGET) is executable
-	[ -f $(TARGET) ] && [ -x $(TARGET) ]
-	# Install the divert
-	dpkg-divert --add --rename --divert $(BACKUP) $(TARGET)
+	# Ensure $(BINARY) is executable
+	[ -f $(BINARY) ] && [ -x $(BINARY) ]
 	# Install the wrapper
-	$(INSTALL_EXEC) $(SRC) $(TARGET)
+	sudo $(INSTALL_EXEC) $(SRC) $(TARGET)
+	# Install the shortcuts
+	./custom_keybindings.py install
 
 uninstall:
-	# Ensure $(BACKUP) is still here
-	[ -f $(BACKUP) ] && [ -x $(BACKUP) ]
+	# Reset the shortcuts
+	./custom_keybindings.py uninstall
 	# Remove the wrapper
-	$(RM) $(TARGET)
-	# Remove the divert
-	dpkg-divert --rename --remove $(TARGET)
+	sudo $(RM) $(TARGET)
 
 .PHONY: all help install uninstall
