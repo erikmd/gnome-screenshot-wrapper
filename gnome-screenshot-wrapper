@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright (c) 2016-2017  Erik Martin-Dorel
-# Version: 0.8-git
+# Version: 0.9
 
 function is_among() {
     local arg="$1"
