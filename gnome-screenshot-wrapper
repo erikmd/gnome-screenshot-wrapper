@@ -52,7 +52,7 @@ function main() {
         if [ "$area" = "false" ]; then
             tmp=$(mktemp "$lockdir/tmp.XXXXXXXXXX.png")
 
-            gnome-screenshot -f "$tmp" "$@" || ret="$?"
+            /usr/bin/gnome-screenshot -f "$tmp" "$@" || ret="$?"
             if [ "$ret" -ne 0 ]; then
                 echo "$prog: an error occured." >&2
                 exit "$ret"
@@ -75,11 +75,11 @@ function main() {
                 echo "$prog: action canceled" >&2
                 exit 1
             fi
-            gnome-screenshot -f "$fil" "$@" || ret="$?"
+            /usr/bin/gnome-screenshot -f "$fil" "$@" || ret="$?"
         fi
         exit "$ret" # explicit quit to run the trap using local var ($lockdir)
     else
-        exec gnome-screenshot "$@"
+        exec /usr/bin/gnome-screenshot "$@"
     fi
 }
 
