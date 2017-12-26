@@ -21,6 +21,8 @@ help:
 install:
 	# Ensure zenity is installed
 	which zenity
+	# Ensure xdg-user-dir is available
+	xdg-user-dir PICTURES
 	# Ensure $(BINARY) is executable
 	[ -f $(BINARY) ] && [ -x $(BINARY) ]
 	# Install the wrapper
