@@ -16,7 +16,27 @@ def reset_default_keybinding(command):
     cmd = ['reset', schema, command]
     subprocess.check_call(['gsettings'] + cmd)
 
+def exist_custom_keybinding(command, binding):
+    schema = 'org.gnome.settings-daemon.plugins.media-keys'
+    key = 'custom-keybindings'
+    schema2 = (schema + '.' + key)[:-1] + ':'
+    get = lambda args: subprocess.check_output(["gsettings", "get"] + args).decode("utf-8").rstrip()
+    out = get([schema, key])
+    if out[-2:] == '[]':
+        return False
+    else:
+        lst = ast.literal_eval(out)
+    for item in lst:
+        xcommand = get([schema2 + item, "command"]).strip("'")
+        xbinding = get([schema2 + item, "binding"]).strip("'")
+        if command == xcommand and binding == xbinding:
+            return True
+    False
+        
 def add_custom_keybinding(name, command, binding):
+    if exist_custom_keybinding(command, binding):
+        print("Definition of keybinding '" + binding + "' already performed.", file=sys.stderr)
+        return
     schema = 'org.gnome.settings-daemon.plugins.media-keys'
     key = 'custom-keybindings'
     schema2 = schema + '.' + key
