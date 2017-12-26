@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Copyright (c) 2016-2017  Erik Martin-Dorel
-# Version: 0.9.1
+# Version: 0.9.2
 
 function is_among() {
     local arg="$1"
@@ -27,55 +27,40 @@ function get_lock() {
 function main() {
     local lockdir="/tmp/${USER}_gnome-screenshot-wrapper"
     local prog='gnome-screenshot'
-    local prefix="$(xdg-user-dir PICTURES)/"
+    local prefix
+    prefix="$(xdg-user-dir PICTURES)/"
     local format='%Y-%m-%d_%H-%M-%S'
     local suffix='_Screenshot.png'
 
     local interactFlags=("-c" "--clipboard" "-i" "--interactive" "--gapplication-service" "-h" "--help" "--help-all" "--help-gtk" "--help-gapplication")
     # --gapplication-service is triggered when clicking on the .desktop icon
-    local areaFlags=("-a" "--area")
 
     local interact="false"
-    local area="false"
     local ret='0'
     for arg; do
         if is_among "$arg" "${interactFlags[@]}"; then
             interact="true"
         fi
-        if is_among "$arg" "${areaFlags[@]}"; then
-            area="true"
-        fi
     done
 
     if [ "$interact" = "false" ]; then
         get_lock
-        if [ "$area" = "false" ]; then
-            tmp=$(mktemp "$lockdir/tmp.XXXXXXXXXX.png")
+        tmp=$(mktemp "$lockdir/tmp.XXXXXXXXXX.png")
 
-            /usr/bin/gnome-screenshot -f "$tmp" "$@" || ret="$?"
-            if [ "$ret" -ne 0 ]; then
-                echo "$prog: an error occured." >&2
-                exit "$ret"
-            fi
+        /usr/bin/gnome-screenshot -f "$tmp" "$@" || ret="$?"
+        if [ "$ret" -ne 0 ]; then
+            echo "$prog: an error occured." >&2
+            exit "$ret"
+        fi
 
-            fil="${prefix}$(date "+$format")${suffix}"
-            fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
+        fil="${prefix}$(date "+$format")${suffix}"
+        fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
 
-            if [ $? -ne 0 ] || [ "$fil" = "" ]; then
-                echo "$prog: action canceled" >&2
-                exit 1
-            else
-                mv -f "$tmp" "$fil"
-            fi
+        if [ $? -ne 0 ] || [ "$fil" = "" ]; then
+            echo "$prog: action canceled" >&2
+            exit 1
         else
-            fil="${prefix}$(date "+$format")${suffix}"
-            fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
-
-            if [ $? -ne 0 ] || [ "$fil" = "" ]; then
-                echo "$prog: action canceled" >&2
-                exit 1
-            fi
-            /usr/bin/gnome-screenshot -f "$fil" "$@" || ret="$?"
+            mv -f "$tmp" "$fil"
         fi
         exit "$ret" # explicit quit to run the trap using local var ($lockdir)
     else
