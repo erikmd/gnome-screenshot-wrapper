@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Copyright (c) 2016-2017  Erik Martin-Dorel
-# Version: 0.9.4
+# Version: 0.9.5-git
 
 function is_among() {
     local arg="$1"
     shift
+    local elt
     for elt; do
         if [ "$arg" = "$elt" ]; then
             return 0
@@ -38,6 +39,7 @@ function main() {
 
     local interact="false"
     local ret='0'
+    local arg
     for arg; do
         if is_among "$arg" "${interactFlags[@]}"; then
             interact="true"
@@ -46,29 +48,32 @@ function main() {
 
     if [ "$interact" = "false" ]; then
         get_lock
+
+        local tmp
         tmp=$(mktemp "$template") || ret="$?"
         if [ "$ret" -ne 0 ]; then
             echo "$prog: failed to create '$template'." >&2
-            exit "$ret"
+            exit $ret
         fi
 
         /usr/bin/gnome-screenshot -f "$tmp" "$@" || ret="$?"
         if [ "$ret" -ne 0 ]; then
             echo "$prog: an error occured." >&2
-            exit "$ret"
+            exit $ret
         fi
 
         if [ 0"$(stat -c "%s" "$tmp")" -ne 0 ]; then
+            local fil
             fil="${prefix}$(date "+$format")${suffix}"
             fil=$(zenity --title="Choose a target file" --file-selection --filename="$fil" --save --confirm-overwrite --file-filter="PNG image files | *.png")
             if [ $? -ne 0 ] || [ "$fil" = "" ]; then
                 echo "$prog: action canceled" >&2
                 exit 1
             else
-                mv -f "$tmp" "$fil"
+                mv -f -- "$tmp" "$fil"
             fi
         fi
-        exit "$ret" # explicit quit to run the trap using local var ($lockdir)
+        exit $ret # explicit quit to run the trap using local var ($lockdir)
     else
         exec /usr/bin/gnome-screenshot "$@"
     fi
