@@ -31,7 +31,7 @@ def exist_custom_keybinding(command, binding):
         xbinding = get([schema2 + item, "binding"]).strip("'")
         if command == xcommand and binding == xbinding:
             return True
-    False
+    return False
         
 def add_custom_keybinding(name, command, binding):
     if exist_custom_keybinding(command, binding):
