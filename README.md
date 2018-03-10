@@ -49,3 +49,8 @@ call itself `sudo` in the step that needs superuser rights.
 To uninstall the wrapper, you can run:
 
 	make uninstall
+
+## Author and License
+
+This tool was written by Erik Martin-Dorel. It is distributed under
+the MIT license.

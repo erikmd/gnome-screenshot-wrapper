@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
 # Copyright (c) 2017-2018  Erik Martin-Dorel
+#
+# This file is distributed under the MIT license, which is available
+# at https://opensource.org/licenses/MIT
+#
+# It is part of the gnome-screenshot-wrapper tool repo, version 0.9.6
 
 import ast
 import subprocess

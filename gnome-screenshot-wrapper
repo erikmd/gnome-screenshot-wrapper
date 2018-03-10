@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# Copyright (c) 2016-2017  Erik Martin-Dorel
-# Version: 0.9.5
+# Copyright (c) 2016-2018  Erik Martin-Dorel
+#
+# This file is distributed under the MIT license, which is available
+# at https://opensource.org/licenses/MIT
+#
+# It is part of the gnome-screenshot-wrapper tool repo, version 0.9.6
 
 function is_among() {
     local arg="$1"
