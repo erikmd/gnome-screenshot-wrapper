@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2017-2018  Erik Martin-Dorel
+# Copyright (c) 2016-2018, 2021  Erik Martin-Dorel
 #
 # This file is distributed under the MIT license, which is available
 # at https://opensource.org/licenses/MIT
@@ -19,7 +19,7 @@ def get(args):
 
 def disable_default_keybinding(command):
     schema = 'org.gnome.settings-daemon.plugins.media-keys'
-    cmd = ['set', schema, command, '']
+    cmd = ['set', schema, command, '[]']
     subprocess.check_call(['gsettings'] + cmd)
 
 
