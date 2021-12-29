@@ -119,11 +119,14 @@ def main():
                               'gnome-screenshot-wrapper -a', '<Shift>Print')
         add_custom_keybinding('Interactive Screenshot of a window',
                               'gnome-screenshot-wrapper -w', '<Alt>Print')
+        add_custom_keybinding('Super Interactive Screenshot',
+                              'gnome-screenshot -i', '<Super>Print')
 
     if sys.argv[1] == "uninstall":
         remove_custom_keybinding('gnome-screenshot-wrapper', 'Print')
         remove_custom_keybinding('gnome-screenshot-wrapper -a', '<Shift>Print')
         remove_custom_keybinding('gnome-screenshot-wrapper -w', '<Alt>Print')
+        remove_custom_keybinding('gnome-screenshot -i', '<Super>Print')
         reset_default_keybinding('screenshot')
         reset_default_keybinding('area-screenshot')
         reset_default_keybinding('window-screenshot')
