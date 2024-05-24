@@ -17,7 +17,7 @@ standard shortcuts (<kbd>Print</kbd> ;
 It also binds another handy shortcut <kbd>Super</kbd>+<kbd>Print</kbd>
 to the standard command `gnome-screenshot -i`.
 
-The default shortcuts involving the clipboard are left untouched
+Shortcuts involving the clipboard are also available
 (<kbd>Ctrl</kbd>+<kbd>Print</kbd> ;
 <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Print</kbd> ;
 <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Print</kbd>).

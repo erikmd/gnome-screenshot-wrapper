@@ -29,6 +29,20 @@ def reset_default_keybinding(command):
     subprocess.check_call(['gsettings'] + cmd)
 
 
+def disable_default_keybinding_2(command):
+    "Tested using GNOME 43."
+    schema = 'org.gnome.shell.keybindings'
+    cmd = ['set', schema, command, '[]']
+    subprocess.check_call(['gsettings'] + cmd)
+
+
+def reset_default_keybinding_2(command):
+    "Tested using GNOME 43."
+    schema = 'org.gnome.shell.keybindings'
+    cmd = ['reset', schema, command]
+    subprocess.check_call(['gsettings'] + cmd)
+
+
 def exist_custom_keybinding(command, binding):
     schema = 'org.gnome.settings-daemon.plugins.media-keys'
     key = 'custom-keybindings'
@@ -110,9 +124,22 @@ def main():
         exit(0)
 
     if sys.argv[1] == "install":
-        disable_default_keybinding('screenshot')
-        disable_default_keybinding('area-screenshot')
-        disable_default_keybinding('window-screenshot')
+        try:
+            disable_default_keybinding('screenshot')
+            disable_default_keybinding('area-screenshot')
+            disable_default_keybinding('window-screenshot')
+        except subprocess.CalledProcessError:
+            # Typical on GNOME 43+
+            print("Trying to use alternative key", file=sys.stderr)
+            disable_default_keybinding_2('screenshot')
+            disable_default_keybinding_2('screenshot-window')
+            disable_default_keybinding_2('show-screenshot-ui')
+            add_custom_keybinding('Clipboard Screenshot',
+                                  'gnome-screenshot -c', '<Control>Print')
+            add_custom_keybinding('Clipboard Screenshot of an area',
+                                  'gnome-screenshot -c -a', '<Shift><Control>Print')
+            add_custom_keybinding('Clipboard Screenshot of a window',
+                                  'gnome-screenshot -c -w', '<Control><Alt>Print')
         add_custom_keybinding('Interactive Screenshot',
                               'gnome-screenshot-wrapper', 'Print')
         add_custom_keybinding('Interactive Screenshot of an area',
@@ -121,15 +148,27 @@ def main():
                               'gnome-screenshot-wrapper -w', '<Alt>Print')
         add_custom_keybinding('Super Interactive Screenshot',
                               'gnome-screenshot -i', '<Super>Print')
+        print("Install successful!", file=sys.stderr)
 
     if sys.argv[1] == "uninstall":
         remove_custom_keybinding('gnome-screenshot-wrapper', 'Print')
         remove_custom_keybinding('gnome-screenshot-wrapper -a', '<Shift>Print')
         remove_custom_keybinding('gnome-screenshot-wrapper -w', '<Alt>Print')
         remove_custom_keybinding('gnome-screenshot -i', '<Super>Print')
-        reset_default_keybinding('screenshot')
-        reset_default_keybinding('area-screenshot')
-        reset_default_keybinding('window-screenshot')
+        try:
+            reset_default_keybinding('screenshot')
+            reset_default_keybinding('area-screenshot')
+            reset_default_keybinding('window-screenshot')
+        except subprocess.CalledProcessError:
+            # Typical on GNOME 43+
+            print("Trying to use alternative key", file=sys.stderr)
+            reset_default_keybinding_2('screenshot')
+            reset_default_keybinding_2('screenshot-window')
+            reset_default_keybinding_2('show-screenshot-ui')
+            remove_custom_keybinding('gnome-screenshot -c', '<Control>Print')
+            remove_custom_keybinding('gnome-screenshot -c -a', '<Shift><Control>Print')
+            remove_custom_keybinding('gnome-screenshot -c -w', '<Control><Alt>Print')
+        print("Uninstall successful!", file=sys.stderr)
 
 
 if __name__ == "__main__":
