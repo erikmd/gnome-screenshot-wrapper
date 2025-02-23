@@ -36,6 +36,13 @@ To avoid concurrent issues, such as a too long press on the
 `/tmp/${USER}_gnome-screenshot-wrapper/` is temporarily created during
 the execution of the wrapper script).
 
+## Requirements
+
+You need to install beforehand:
+
+* the `gnome-screenshot` package (if `which gnome-screenshot` does not print anything)
+* the `zenity` package (**note:** versions {`4.0.0`, `4.0.1`} contain a [regression](https://gitlab.gnome.org/GNOME/zenity/-/issues/80))
+
 ## Installation
 
 You just need to clone this repo and use the provided Makefile:
